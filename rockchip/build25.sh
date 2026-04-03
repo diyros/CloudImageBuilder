@@ -1,7 +1,6 @@
 #!/bin/bash
 # Log file for debugging
 source shell/custom-packages.sh
-source shell/switch_repository.sh
 echo "第三方软件包: $CUSTOM_PACKAGES"
 LOGFILE="/tmp/uci-defaults-log.txt"
 echo "Starting 99-custom.sh at $(date)" >> $LOGFILE
@@ -42,14 +41,15 @@ else
   # 添加架构优先级信息
   sed -i '1i\
   arch aarch64_generic 10\n\
-  arch aarch64_cortex-a53 15' repositories.conf
+  arch aarch64_cortex-a53 15' repositories
 fi
+
 
 
 # 输出调试信息
 echo "$(date '+%Y-%m-%d %H:%M:%S') - 开始构建固件..."
-echo "查看repositories.conf信息——————"
-cat repositories.conf
+echo "查看repositories信息——————"
+cat repositories
 # 定义所需安装的包列表 下列插件你都可以自行删减
 PACKAGES=""
 PACKAGES="$PACKAGES curl"
@@ -94,8 +94,9 @@ else
     echo "⚪️ 未选择 luci-app-openclash"
 fi
 
+cd /home/build/immortalwrt
+make image PROFILE=$PROFILE PACKAGES="$PACKAGES" FILES=files ROOTFS_PARTSIZE=$ROOTFS_PARTSIZE
 
-make image PROFILE=$PROFILE PACKAGES="$PACKAGES" FILES="/home/build/immortalwrt/files" ROOTFS_PARTSIZE=$ROOTFS_PARTSIZE
 
 if [ $? -ne 0 ]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') - Error: Build failed!"

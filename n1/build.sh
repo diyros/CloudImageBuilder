@@ -1,6 +1,7 @@
 #!/bin/bash
 # Log file for debugging
 source shell/custom-packages.sh
+source shell/switch_repository.sh
 echo "第三方软件包: $CUSTOM_PACKAGES"
 LOGFILE="/tmp/uci-defaults-log.txt"
 echo "Starting 99-custom.sh at $(date)" >> $LOGFILE
@@ -8,6 +9,19 @@ echo "Starting 99-custom.sh at $(date)" >> $LOGFILE
 echo "Building for profile: $PROFILE"
 # yml 传入的固件大小 ROOTFS_PARTSIZE
 echo "Building for ROOTFS_PARTSIZE: $ROOTFS_PARTSIZE"
+
+OFFICIAL="https://downloads.immortalwrt.org"
+MIRROR="https://mirrors.cernet.edu.cn/immortalwrt"
+echo ">>> official failed, switching to mirror"
+BASE_URL="$MIRROR"
+echo "Using BASE_URL = $BASE_URL"
+echo "========================================"
+echo "Updating repositories.conf"
+echo "========================================"
+sed -i "s#${OFFICIAL}#${BASE_URL}#g" repositories.conf
+cat repositories.conf
+
+
 # 输出调试信息
 echo "$(date '+%Y-%m-%d %H:%M:%S') - 开始构建arm64的rootfs.tar.gz"
 # 定义所需安装的包列表 下列插件你都可以自行删减
@@ -29,8 +43,6 @@ PACKAGES="$PACKAGES openssh-sftp-server"
 PACKAGES="$PACKAGES luci-i18n-samba4-zh-cn"
 # 文件管理器
 PACKAGES="$PACKAGES luci-i18n-filemanager-zh-cn"
-# 静态文件服务器dufs(推荐)
-PACKAGES="$PACKAGES luci-i18n-dufs-zh-cn"
 # 判断是否需要编译 Docker 插件
 if [ "$INCLUDE_DOCKER" = "yes" ]; then
     PACKAGES="$PACKAGES luci-i18n-dockerman-zh-cn"

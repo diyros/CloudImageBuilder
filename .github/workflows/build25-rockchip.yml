@@ -1,4 +1,4 @@
-name: build-rockchip-immortalWrt-25.12-SNAPSHOT
+name: rockchip-immortalWrt-25.12
 
 on:
   workflow_dispatch:
@@ -6,15 +6,10 @@ on:
       luci_version:
         description: "选择luci版本"
         required: false
-        default: "24.10.5"
+        default: "25.12"
         type: choice
         options:
-          - 24.10.0
-          - 24.10.1
-          - 24.10.2
-          - 24.10.3
-          - 24.10.4
-          - 24.10.5
+          - 25.12
       profile:
         type: choice
         description: |
@@ -65,7 +60,7 @@ on:
           - xunlong_orangepi-r1-plus
           - xunlong_orangepi-r1-plus-lts
         required: true
-        default: 'friendlyarm_nanopi-r3s'
+        default: 'radxa_e20c'
       custom_router_ip:
         description: "请设置软路由的管理地址(注意仅对多网口软路由有效) 格式:192.168.x.1 或 10.x.x.1"
         required: true
@@ -78,12 +73,12 @@ on:
         description: "集成 store 商店"
         required: false
         type: boolean
-        default: false
+        default: true
       include_docker:
         description: |
           是否编译 Docker 插件
         required: true
-        default: 'no'
+        default: 'yes'
         type: choice
         options:
           - 'yes'
@@ -112,7 +107,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set executable permissions
-        run: chmod +x ${{ github.workspace }}/rockchip/build24.sh
+        run: chmod +x ${{ github.workspace }}/rockchip/build25.sh
       
       - name: Save Custom Router IP into OpenWrt files
         run: |
@@ -156,10 +151,10 @@ jobs:
           echo "Building for profile: $profile"
           docker run --rm -i \
               --user root \
-              -v "${{ github.workspace }}/Makefile:/home/build/immortalwrt/Makefile" \
               -v "${{ github.workspace }}/bin:/home/build/immortalwrt/bin" \
               -v "${{ github.workspace }}/files:/home/build/immortalwrt/files" \
               -v "${{ github.workspace }}/custom:/home/build/immortalwrt/files/etc/config" \
+              -v "${{ github.workspace }}/arch/arch.conf:/home/build/immortalwrt/files/etc/opkg/arch.conf" \
               -v "${{ github.workspace }}/rockchip/imm.config:/home/build/immortalwrt/.config" \
               -v "${{ github.workspace }}/shell:/home/build/immortalwrt/shell" \
               -v "${{ github.workspace }}/rockchip/build25.sh:/home/build/immortalwrt/build.sh" \
@@ -169,7 +164,7 @@ jobs:
               -e ENABLE_PPPOE=${{ inputs.enable_pppoe }} \
               -e PPPOE_ACCOUNT=${{ inputs.pppoe_account }} \
               -e PPPOE_PASSWORD=${{ inputs.pppoe_password }} \
-          immortalwrt/imagebuilder:rockchip-armv8-openwrt-25.12 /bin/bash /home/build/immortalwrt/build.sh
+          immortalwrt/imagebuilder:rockchip-armv8-openwrt-${luci_version} /bin/bash /home/build/immortalwrt/build.sh
         
     
       - name: Create info
@@ -197,7 +192,7 @@ jobs:
           name: ImmortWrt-Rockchip
           body_path: ${{ github.workspace }}/router-info.md
           files: |
-            ${{ github.workspace }}/bin/targets/rockchip/armv8/*.img.gz
+            ${{ github.workspace }}/bin/targets/rockchip/armv8/*squashfs-sysupgrade.img.gz
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
